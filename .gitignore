@@ -1,0 +1,28 @@
+# Environments
+.venv/
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Node
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Data (FAISS, logs, traces are kept if needed? Traces might be fine. But faiss_index is binary. Let's keep data/ because it's part of the app unless it's huge. FAISS index is small. So we won't ignore data/)
+
+# IDE
+.vscode/
+.idea/
+.DS_Store

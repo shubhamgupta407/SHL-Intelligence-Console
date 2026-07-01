@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+requests
+beautifulsoup4
+faiss-cpu
+sentence-transformers
+groq
+pydantic
+python-dotenv
+langgraph
+langchain-core
