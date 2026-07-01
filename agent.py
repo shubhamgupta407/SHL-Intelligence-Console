@@ -9,8 +9,16 @@ from sentence_transformers import SentenceTransformer
 from typing_extensions import TypedDict
 from langgraph.graph import StateGraph, START, END
 
-client = Groq()
+from groq import Groq, GroqError
+import random
 
+def get_groq_client():
+    # Find any environment variables starting with GROQ_API_KEY
+    keys = [v for k, v in os.environ.items() if k.startswith("GROQ_API_KEY") and v]
+    if not keys:
+        return Groq() # Defaults to standard behavior
+    # Randomly select a key to distribute load
+    return Groq(api_key=random.choice(keys))
 class AssessmentRecommendation(BaseModel):
     name: str
     url: str
@@ -25,12 +33,12 @@ class AgentResponse(BaseModel):
 
 class RouterOutput(BaseModel):
     intent: str = Field(description="One of: 'clarify', 'search', 'refuse', 'compare', 'recommend'")
-    search_query: str = Field(description="Semantic search query if intent is search or compare. Empty otherwise.")
+    search_queries: List[str] = Field(description="List of 3 distinct semantic search queries if intent is search or compare. Empty otherwise.", default_factory=list)
 
 class AgentState(TypedDict):
     messages: List[Dict[str, str]]
     intent: str
-    search_query: str
+    search_queries: List[str]
     candidates: List[Dict]
     final_response: Optional[AgentResponse]
 
@@ -38,6 +46,13 @@ class AgentState(TypedDict):
 _FAISS_INDEX: faiss.Index = None
 _CATALOG: List[Dict] = []
 _EMBEDDER: SentenceTransformer = None
+
+_SIMILARITY_GRAPH = {}
+try:
+    with open("data/similarity_graph.json", "r") as f:
+        _SIMILARITY_GRAPH = json.load(f)
+except Exception:
+    pass
 
 def init_globals(index: faiss.Index, catalog: List[Dict], embedder: SentenceTransformer):
     global _FAISS_INDEX, _CATALOG, _EMBEDDER
@@ -52,6 +67,7 @@ def _llm_call(prompt: str, messages: List[Dict[str, str]], schema_class: BaseMod
     
     api_messages = [{"role": "system", "content": full_prompt}] + messages
     
+    client = get_groq_client()
     completion = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=api_messages,
@@ -75,10 +91,15 @@ def router_node(state: AgentState) -> AgentState:
     - 'search': User has provided enough constraints to fetch assessments (Only allowed on Turn 2+).
     - 'compare': User explicitly asks to compare specific assessments.
     - 'recommend': If constraints are completely clear and no new search is needed.
+    
+    If intent is 'search' or 'compare', you MUST generate EXACTLY 3 distinct semantic search queries in 'search_queries' to maximize catalog retrieval. 
+    Query 1: Focus on the specific role or seniority.
+    Query 2: Focus on generic test family names or products (e.g., 'OPQ', 'Personality').
+    Query 3: Focus on specific skills or measurement types.
     """
     
-    out = _llm_call(prompt, state['messages'][-3:], RouterOutput)
-    return {"intent": out.intent, "search_query": out.search_query}
+    out = _llm_call(prompt, state['messages'], RouterOutput)
+    return {"intent": out.intent, "search_queries": out.search_queries}
 
 def clarify_node(state: AgentState) -> AgentState:
     prompt = """You are an expert SHL Assessment Recommender aiming to clarify the user's needs.
@@ -95,22 +116,85 @@ def clarify_node(state: AgentState) -> AgentState:
     return {"final_response": out}
 
 def search_node(state: AgentState) -> AgentState:
-    if not state.get('search_query'):
+    queries = state.get('search_queries', [])
+    if not queries:
         return {"candidates": []}
         
-    query = state['search_query']
-    vector = _EMBEDDER.encode([query])
-    faiss.normalize_L2(vector)
-    distances, indices = _FAISS_INDEX.search(vector, 15)
+    all_indices = set()
+    for query in queries:
+        vector = _EMBEDDER.encode([query])
+        faiss.normalize_L2(vector)
+        distances, indices = _FAISS_INDEX.search(vector, 15)
+        for idx in indices[0]:
+            if idx != -1 and idx < len(_CATALOG):
+                all_indices.add(idx)
+                
+    base_candidates = []
+    base_ids = set()
+    for idx in list(all_indices)[:20]:
+        c = _CATALOG[idx].copy()
+        c['_catalog_idx'] = idx
+        base_candidates.append(c)
+        base_ids.add(idx)
+        
+    injected_candidates = []
+    injected_ids = set()
     
-    candidates = []
-    for idx in indices[0]:
-        if idx != -1 and idx < len(_CATALOG):
-            candidates.append(_CATALOG[idx])
-            
-    # Modify intent if we successfully retrieved so we can route to recommend/compare
+    for base_c in base_candidates:
+        if len(injected_candidates) >= 5: break
+        desc = base_c.get('description', '')
+        base_name = base_c.get('name', '')
+        
+        # Layer 1: Name match
+        for i, item in enumerate(_CATALOG):
+            if i in base_ids or i in injected_ids: continue
+            if item['name'] in desc:
+                c_copy = item.copy()
+                c_copy['injected_via'] = "name_match"
+                injected_candidates.append(c_copy)
+                injected_ids.add(i)
+                if len(injected_candidates) >= 5: break
+                
+        if len(injected_candidates) >= 5: break
+        
+        # Layer 2: Prefix match
+        prefix = base_name.split(' ')[0] if base_name else ""
+        if prefix and prefix in desc:
+            for i, item in enumerate(_CATALOG):
+                if i in base_ids or i in injected_ids: continue
+                if prefix in item['name']:
+                    b_keys = set(base_c.get('keys', []))
+                    i_keys = set(item.get('keys', []))
+                    if b_keys.intersection(i_keys):
+                        c_copy = item.copy()
+                        c_copy['injected_via'] = "prefix_match"
+                        injected_candidates.append(c_copy)
+                        injected_ids.add(i)
+                        if len(injected_candidates) >= 5: break
+                        
+        if len(injected_candidates) >= 5: break
+        
+        # Layer 3: Semantic Match
+        base_idx = str(base_c['_catalog_idx'])
+        if base_idx in _SIMILARITY_GRAPH:
+            for n_idx_str, score in _SIMILARITY_GRAPH[base_idx]:
+                n_idx = int(n_idx_str)
+                if score >= 0.75 and n_idx not in base_ids and n_idx not in injected_ids:
+                    print(f"Layer 3 Injection: {base_name} -> {_CATALOG[n_idx]['name']} (Score: {score})")
+                    c_copy = _CATALOG[n_idx].copy()
+                    c_copy['injected_via'] = "semantic_similarity"
+                    c_copy['similarity_score'] = score
+                    injected_candidates.append(c_copy)
+                    injected_ids.add(n_idx)
+                    if len(injected_candidates) >= 5: break
+                    
+    final_candidates = []
+    for c in base_candidates + injected_candidates:
+        c.pop('_catalog_idx', None)
+        final_candidates.append(c)
+        
     next_intent = "recommend" if state['intent'] == "search" else state['intent']
-    return {"candidates": candidates, "intent": next_intent}
+    return {"candidates": final_candidates, "intent": next_intent}
 
 def recommend_node(state: AgentState) -> AgentState:
     candidates = state.get('candidates', [])
@@ -123,6 +207,7 @@ def recommend_node(state: AgentState) -> AgentState:
         prompt = f"""You are the recommendation node. 
         Using ONLY the retrieved SHL assessments below, provide a shortlist (1-10 items). 
         Explain why they fit the user's needs. 
+        CRITICAL RULE: Some reports are dependent on a base assessment (e.g., OPQ Leadership Report requires OPQ32r). If you recommend a specific report and its foundational assessment is ALSO listed in the retrieved items below, you MUST recommend BOTH together. Do not assume the user already has the foundational test.
         NEVER hallucinate URLs or assessments not provided below.
         If the user refined constraints, update the list based on the new context.
         
@@ -197,7 +282,7 @@ def generate_chat_response(messages: List[Dict[str, str]], index: faiss.Index, c
     initial_state = {
         "messages": messages,
         "intent": "",
-        "search_query": "",
+        "search_queries": [],
         "candidates": [],
         "final_response": None
     }
