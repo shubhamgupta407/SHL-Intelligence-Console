@@ -81,7 +81,15 @@ def router_node(state: AgentState) -> AgentState:
     return {"intent": out.intent, "search_query": out.search_query}
 
 def clarify_node(state: AgentState) -> AgentState:
-    prompt = "The request is vague. Ask exactly ONE focused clarifying question (role type, seniority, language). Do NOT recommend anything yet. Set end_of_conversation to false."
+    prompt = """You are an expert SHL Assessment Recommender aiming to clarify the user's needs.
+    Analyze the FULL conversation history. 
+    1. First, consider every fact already stated anywhere in the conversation history (e.g., seniority, role type, specific skills, what they are hiring for).
+    2. NEVER re-ask for information that has already been provided (e.g., if they already said 'Java' or 'mid-level', do not ask about those again).
+    3. If the user provides information that contradicts something they stated earlier (e.g., saying 'junior' after previously saying 'mid-level'), you MUST explicitly acknowledge the contradiction and ask them to confirm which value to use.
+    4. Identify what is STILL MISSING to make a confident recommendation. Think about role type, seniority, key skills, or what specifically is being measured (e.g., technical skills vs. personality/behavior vs. cognitive ability).
+    5. Ask exactly ONE clarifying question about the SINGLE most important missing piece based on what they have actually said so far.
+    6. Do NOT return any recommendations yet. Set end_of_conversation to false.
+    """
     out = _llm_call(prompt, state['messages'], AgentResponse)
     return {"final_response": out}
 
