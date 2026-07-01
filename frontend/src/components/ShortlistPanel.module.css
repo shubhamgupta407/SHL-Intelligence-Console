@@ -11,6 +11,7 @@
   overflow-y: auto;
   box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
   z-index: 20;
+  height: 100vh;
 }
 
 @keyframes slideIn {
@@ -18,7 +19,7 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
-.title {
+.header {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
@@ -27,7 +28,7 @@
   gap: var(--spacing-2);
 }
 
-.title::before {
+.header::before {
   content: '';
   display: block;
   width: 12px;
@@ -35,6 +36,12 @@
   background: var(--accent-primary);
   border-radius: 2px;
   box-shadow: 0 0 10px var(--accent-primary);
+}
+
+.cardList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-4);
 }
 
 .card {
@@ -46,8 +53,6 @@
   flex-direction: column;
   gap: var(--spacing-3);
   transition: all 0.2s ease;
-  cursor: pointer;
-  text-decoration: none;
 }
 
 .card:hover {
@@ -57,17 +62,51 @@
   box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
 }
 
-.cardTitle {
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--spacing-2);
+}
+
+.name {
   font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
   line-height: 1.4;
 }
 
-.meta {
+.verifiedLink {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--accent-green);
+  text-decoration: none;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 8px;
+  border-radius: var(--radius-full);
+  transition: all 0.2s;
+}
+
+.verifiedLink:hover {
+  background: rgba(16, 185, 129, 0.2);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.3);
+}
+
+.verifiedIcon {
+  width: 12px;
+  height: 12px;
+}
+
+.metadata {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-2);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  align-items: center;
 }
 
 .badge {
@@ -85,14 +124,4 @@
 .card:hover .badge {
   background: rgba(59, 130, 246, 0.15);
   color: var(--accent-glow);
-}
-
-.languages {
-  font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: var(--spacing-2);
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }

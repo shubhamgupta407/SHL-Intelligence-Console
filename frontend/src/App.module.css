@@ -1,6 +1,64 @@
-.app {
+.appContainer {
   display: flex;
   height: 100vh;
   width: 100vw;
   background: radial-gradient(circle at top center, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.healthBadge {
+  position: absolute;
+  top: var(--spacing-4);
+  left: var(--spacing-6);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-muted);
+}
+
+.statusIndicator.ready {
+  background-color: var(--accent-green);
+  box-shadow: 0 0 10px var(--accent-green);
+}
+
+.statusIndicator.error {
+  background-color: #ef4444;
+  box-shadow: 0 0 10px #ef4444;
+}
+
+.statusIndicator.waking {
+  background-color: #fbbf24;
+  box-shadow: 0 0 10px #fbbf24;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.mainZone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.sideZone {
+  position: relative;
+  z-index: 20;
 }
