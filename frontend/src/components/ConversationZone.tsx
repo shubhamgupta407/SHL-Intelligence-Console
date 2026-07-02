@@ -135,7 +135,12 @@ export const ConversationZone: React.FC<Props> = ({
             </form>
           )}
           <div className={styles.inputFooter}>
-            SHL Intelligence can make mistakes. Verify critical assessments.
+            <span>SHL Intelligence can make mistakes. Verify critical assessments.</span>
+            {turnCount > 0 && (
+              <span style={{ float: 'right', opacity: 0.6 }}>
+                Turn {turnCount} of 8
+              </span>
+            )}
           </div>
         </div>
       </div>

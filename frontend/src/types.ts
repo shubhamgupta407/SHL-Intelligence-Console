@@ -9,6 +9,7 @@ export interface Recommendation {
   test_type: string;
   duration?: string;
   languages?: string[];
+  reasoning?: string;
 }
 
 export interface AgentResponse {

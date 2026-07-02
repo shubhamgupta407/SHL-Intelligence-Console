@@ -4,6 +4,7 @@
   flex-direction: column;
   position: relative;
   height: 100%;
+  overflow: hidden;
 }
 
 .scrollArea {
@@ -34,13 +35,13 @@
 .welcomeTitle {
   font-size: 2rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-paper-primary);
   letter-spacing: -0.03em;
 }
 
 .starterGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--spacing-4);
   width: 100%;
 }
@@ -66,12 +67,12 @@
 .cardTitle {
   font-size: 0.95rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--text-paper-primary);
 }
 
 .cardText {
   font-size: 0.85rem;
-  color: var(--text-muted);
+  color: var(--text-paper-secondary);
 }
 
 /* Message List */
@@ -102,20 +103,20 @@
 }
 
 .messageWrapper.user .avatar {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-primary);
+  background: #FFFFFF;
+  border: 1px solid var(--border-paper);
+  color: var(--text-paper-primary);
 }
 
 .messageWrapper.agent .avatar {
-  background: var(--text-primary);
-  color: var(--bg-primary);
+  background: var(--text-paper-primary);
+  color: var(--bg-paper);
 }
 
 .messageContent {
   flex: 1;
   font-size: 0.95rem;
-  color: var(--text-primary);
+  color: var(--text-paper-primary);
   line-height: 1.6;
   padding-top: 4px; /* align with avatar text */
 }
@@ -126,7 +127,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(180deg, transparent 0%, var(--bg-primary) 30%);
+  background: linear-gradient(180deg, transparent 0%, var(--bg-paper) 30%);
   padding: var(--spacing-6);
   display: flex;
   justify-content: center;
@@ -145,8 +146,8 @@
 .inputForm {
   display: flex;
   align-items: center;
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-subtle);
+  background: #FFFFFF;
+  border: 1px solid var(--border-paper);
   border-radius: var(--radius-xl);
   padding: var(--spacing-2) var(--spacing-3);
   box-shadow: var(--shadow-float);
@@ -162,7 +163,7 @@
   background: transparent;
   border: none;
   padding: var(--spacing-2);
-  color: var(--text-primary);
+  color: var(--text-paper-primary);
   font-family: var(--font-sans);
   font-size: 0.95rem;
   outline: none;
@@ -173,9 +174,9 @@
 }
 
 .submitBtn {
-  background: var(--bg-tertiary);
-  color: var(--text-primary);
-  border: 1px solid var(--border-subtle);
+  background: var(--accent-primary);
+  color: #FFFFFF;
+  border: none;
   border-radius: var(--radius-lg);
   width: 32px;
   height: 32px;
@@ -187,8 +188,8 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-  background: var(--text-primary);
-  color: var(--bg-primary);
+  background: var(--accent-secondary);
+  color: #FFFFFF;
 }
 
 .submitBtn:disabled {
@@ -199,7 +200,7 @@
 .inputFooter {
   text-align: center;
   font-size: 0.75rem;
-  color: var(--text-muted);
+  color: var(--text-paper-muted);
 }
 
 /* End State */

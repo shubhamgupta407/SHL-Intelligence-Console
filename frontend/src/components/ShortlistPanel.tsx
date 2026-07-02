@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import type { Recommendation } from '../types';
 import styles from './ShortlistPanel.module.css';
 
@@ -7,6 +7,27 @@ interface Props {
 }
 
 export const ShortlistPanel: React.FC<Props> = ({ recommendations }) => {
+  const [prevUrls, setPrevUrls] = useState<Set<string>>(new Set());
+  const [newUrls, setNewUrls] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (recommendations) {
+      const currentUrls = new Set(recommendations.map(r => r.url));
+      
+      // Find URLs that are in current but not in prev
+      if (prevUrls.size > 0) {
+        const newlyAdded = new Set<string>();
+        currentUrls.forEach(url => {
+          if (!prevUrls.has(url)) {
+            newlyAdded.add(url);
+          }
+        });
+        setNewUrls(newlyAdded);
+      }
+      
+      setPrevUrls(currentUrls);
+    }
+  }, [recommendations]);
   if (!recommendations || recommendations.length === 0) {
     return null; // Empty array handled by agent, but as a fallback
   }
@@ -16,8 +37,13 @@ export const ShortlistPanel: React.FC<Props> = ({ recommendations }) => {
       <h2 className={styles.header}>Recommended Assessments</h2>
       
       <div className={styles.cardList}>
-        {recommendations.map((rec, idx) => (
-          <div key={`${rec.url}-${idx}`} className={styles.card}>
+        {recommendations.map((rec, idx) => {
+          const isNew = newUrls.has(rec.url);
+          return (
+            <div 
+              key={`${rec.url}-${idx}`} 
+              className={`${styles.card} ${isNew ? styles.pulseHighlight : ''}`}
+            >
             
             <div className={styles.cardHeader}>
               <div className={styles.name}>{rec.name}</div>
@@ -29,10 +55,11 @@ export const ShortlistPanel: React.FC<Props> = ({ recommendations }) => {
                 title="View in SHL Catalog"
               >
                 <svg className={styles.verifiedIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                  <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
                 </svg>
-                Verified
+                View Test
               </a>
             </div>
 
@@ -50,8 +77,14 @@ export const ShortlistPanel: React.FC<Props> = ({ recommendations }) => {
               )}
             </div>
 
+            {rec.reasoning && (
+              <div className={styles.reasoning}>
+                <strong>Matched because:</strong> {rec.reasoning}
+              </div>
+            )}
+
           </div>
-        ))}
+        )})}
       </div>
     </div>
   );

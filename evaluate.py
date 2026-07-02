@@ -85,11 +85,12 @@ def evaluate(api_url: str, traces_dir: str, subset_files: List[str] = None):
                     
                 data = resp.json()
                 
-                # Check schema
                 if 'reply' not in data or 'recommendations' not in data or 'end_of_conversation' not in data:
                     print("    Schema Error: Missing fields")
                     schema_failures += 1
                     break
+                    
+                print(f"    Agent Reply: {data['reply'][:150]}...")
                     
                 rec_urls = [r['url'] for r in (data['recommendations'] or [])]
                 expected_urls = turn.get('expected_urls', [])
@@ -106,10 +107,15 @@ def evaluate(api_url: str, traces_dir: str, subset_files: List[str] = None):
                     recall = hits / len(expected_urls)
                     total_recall += recall
                     total_queries += 1
+                    print(f"    Recommendations returned: {len(rec_urls)}")
+                    for r in (data['recommendations'] or []):
+                        print(f"      - {r['name']} ({r['url']})")
                     print(f"    Recall@10: {recall:.2f} ({hits}/{len(expected_urls)})")
                 else:
                     if len(rec_urls) > 0:
                         print(f"    Warning: Expected 0 recommendations, got {len(rec_urls)}")
+                        for r in data['recommendations']:
+                            print(f"      - {r['name']} ({r['url']})")
                         
                 # End of conversation check
                 if turn['end_of_conversation'] and not data['end_of_conversation']:
@@ -138,5 +144,5 @@ if __name__ == "__main__":
     traces_path = "data/traces/GenAI_SampleConversations"
     if not os.path.exists(traces_path):
         traces_path = "data/traces"
-    # Test only a subset of traces first to avoid hitting rate limits
-    evaluate("http://localhost:8000", traces_path, subset_files=["C1.md", "C5.md", "C7.md"])
+    # Test all traces now that we have API load balancing
+    evaluate("http://localhost:8000", traces_path)

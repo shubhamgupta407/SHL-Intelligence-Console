@@ -1,21 +1,27 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Minimalist Premium Dark SaaS Theme (Linear/Vercel inspired) */
-  --bg-primary: #0A0A0A;
-  --bg-secondary: #111111;
-  --bg-tertiary: #1A1A1A;
+  /* Ink/Paper Split-Pane Theme */
+  --bg-primary: #10141C;      /* Deep Ink Navy (Sidebar & Panel) */
+  --bg-secondary: #0D1017;    /* Slightly darker navy for depth */
+  --bg-tertiary: #1A212D;     /* Hover states in navy */
+  --bg-paper: #F6F4EF;        /* Warm Paper Tone (Conversation Surface) */
   --bg-hover: rgba(255, 255, 255, 0.05);
   
-  --text-primary: #EDEDED;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
+  --text-primary: #EDEDED;    /* White text on Navy */
+  --text-secondary: #94A3B8;  /* Muted text on Navy */
+  --text-muted: #64748B;
+  
+  --text-paper-primary: #111827;   /* Dark text on Paper */
+  --text-paper-secondary: #4B5563; /* Muted text on Paper */
+  --text-paper-muted: #9CA3AF;
   
   --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-paper: rgba(0, 0, 0, 0.08);
   --border-hover: rgba(255, 255, 255, 0.15);
 
-  --accent-primary: #EDEDED;
-  --accent-secondary: #27272A;
+  --accent-primary: #1F7A5C;  /* Strategic Accent Green */
+  --accent-secondary: #165A43; /* Darker Green for hover */
   
   --status-ready: #10B981;
   --status-error: #EF4444;

@@ -94,6 +94,16 @@
   100% { opacity: 0.4; }
 }
 
+.provenance {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: var(--spacing-4);
+  line-height: 1.4;
+  padding-top: var(--spacing-4);
+  border-top: 1px dashed var(--border-subtle);
+  font-family: var(--font-mono);
+}
+
 /* Main Area */
 .mainContent {
   flex: 1;
@@ -101,6 +111,7 @@
   flex-direction: column;
   position: relative;
   min-width: 0; /* allows shrinking */
+  background: var(--bg-paper);
 }
 
 /* Right Panel */

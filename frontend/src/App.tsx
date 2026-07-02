@@ -38,6 +38,9 @@ function App() {
             <span className={`${styles.statusDot} ${styles[healthStatus]}`}></span>
             {healthText}
           </div>
+          <div className={styles.provenance}>
+            Grounded against 200+ verified SHL assessments · Last synced today
+          </div>
         </div>
       </nav>
 

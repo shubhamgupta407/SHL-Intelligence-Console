@@ -36,6 +36,26 @@ def build_index(catalog_path="data/catalog.json", index_path="data/faiss_index.b
     
     faiss.write_index(index, index_path)
     print(f"Index saved to {index_path} with {index.ntotal} items.")
+    
+    print("Computing semantic similarity graph...")
+    similarity_matrix = np.dot(embeddings, embeddings.T)
+    
+    similarity_graph = {}
+    for i in range(len(catalog)):
+        top_indices = np.argsort(similarity_matrix[i])[-16:][::-1]
+        neighbors = []
+        for j in top_indices:
+            if i != j:
+                score = float(similarity_matrix[i][j])
+                neighbors.append([int(j), score])
+            if len(neighbors) == 15:
+                break
+        similarity_graph[str(i)] = neighbors
+        
+    graph_path = "data/similarity_graph.json"
+    with open(graph_path, "w", encoding="utf-8") as f:
+        json.dump(similarity_graph, f, indent=2)
+    print(f"Similarity graph saved to {graph_path}")
 
 if __name__ == "__main__":
     os.makedirs("data", exist_ok=True)
