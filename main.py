@@ -1,10 +1,13 @@
+import os
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List, Dict, Any
 import json
 import faiss
 from sentence_transformers import SentenceTransformer
-import os
 from dotenv import load_dotenv
 load_dotenv()
 
