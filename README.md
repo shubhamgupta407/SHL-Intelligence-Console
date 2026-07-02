@@ -1,11 +1,22 @@
 # SHL Intelligence Console
 
-![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white)
-![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)
-![LangGraph](https://img.shields.io/badge/LangGraph-State_Machine-FF4F00?style=for-the-badge)
-![Groq](https://img.shields.io/badge/Groq-LLaMa_3_70b-f3503b?style=for-the-badge)
+<div align="center">
+  <p><strong>About:</strong> An advanced conversational AI agent that helps recruiters find the right SHL assessments through natural dialogue, featuring multi-turn context accumulation and deterministic semantic retrieval.</p>
+  <p><strong>Topics:</strong> <code>artificial-intelligence</code> <code>rag</code> <code>conversational-ai</code> <code>langgraph</code> <code>fastapi</code> <code>faiss</code> <code>react</code> <code>typescript</code></p>
+</div>
+
+<br />
+
+<div align="center">
+  <img src="https://img.shields.io/badge/Python-3.10%2B-blue?style=for-the-badge&logo=python&logoColor=white" />
+  <img src="https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black" />
+  <img src="https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/LangGraph-State_Machine-FF4F00?style=for-the-badge" />
+  <img src="https://img.shields.io/badge/Groq-LLaMa_3_70b-f3503b?style=for-the-badge" />
+</div>
+
+<br />
 
 An advanced conversational AI agent that helps recruiters find the right SHL assessments through natural dialogue. Rather than relying on rigid keyword searches, recruiters describe their hiring needs in plain language, and the agent intelligently clarifies requirements, performs semantic retrieval over the SHL catalog, and recommends a grounded shortlist of assessments.
 
@@ -45,6 +56,23 @@ Building an enterprise-grade AI assistant requires balancing latency, accuracy, 
 - **Decision:** Pure dense vector search (FAISS + `all-MiniLM-L6-v2`) struggles heavily with exact acronym matches (e.g., "SVAR" for spoken language tests) and short queries. We implemented a 3-Layer Injection system: Lexical Name Match -> Prefix Match -> Pre-computed Semantic Graph Injection.
 - **Tradeoff:** Adding heuristic layers and a pre-computed similarity graph marginally increases retrieval time (~15ms) but drastically improves Recall@10, ensuring critical dependency tests are never missed.
 
+```mermaid
+graph LR
+    Query[User Query] --> Embed[MiniLM Embedder]
+    Embed --> FAISS[(FAISS Dense Index)]
+    
+    FAISS --> Base[Base Candidates]
+    Base --> L1[Layer 1: Lexical Name]
+    Base --> L2[Layer 2: Family Prefix]
+    Base --> L3[Layer 3: Semantic Graph]
+    
+    L1 --> Pool[Candidate Pool]
+    L2 --> Pool
+    L3 --> Pool
+    
+    Pool --> Truncate{Truncate to Top 15}
+    Truncate --> LLM[LLM Context Injection]
+```
 ### 3. Context Engineering vs. Graph Routing Complexity
 - **Decision:** We initially attempted to solve missing domain knowledge (e.g., knowing to ask about spoken languages for Contact Center roles) by rerouting the LangGraph through FAISS before clarification (Retrieval-Augmented Clarification).
 - **Tradeoff:** This resulted in fragile "spaghetti" routing that caused the agent to over-clarify on well-defined domains (like Finance). We shifted to rigid **Context Engineering**—injecting explicit "Consulting Guidelines" directly into the prompt. This ensures 100% compliance with golden evaluation traces without over-complicating the state machine.
