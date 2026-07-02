@@ -1,10 +1,5 @@
 # SHL Intelligence Console
 
-<div align="center">
-  <p><strong>About:</strong> An advanced conversational AI agent that helps recruiters find the right SHL assessments through natural dialogue, featuring multi-turn context accumulation and deterministic semantic retrieval.</p>
-  <p><strong>Topics:</strong> <code>artificial-intelligence</code> <code>rag</code> <code>conversational-ai</code> <code>langgraph</code> <code>fastapi</code> <code>faiss</code> <code>react</code> <code>typescript</code></p>
-</div>
-
 <br />
 
 <div align="center">
